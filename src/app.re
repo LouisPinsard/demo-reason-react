@@ -5,5 +5,6 @@ let make = (_children) => {
   render: _self =>
     <div>
       (ReasonReact.string("Pokedex"))
+      <Pokedex/>
     </div>,
 };
