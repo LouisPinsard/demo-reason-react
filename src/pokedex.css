@@ -1,0 +1,12 @@
+.submit-button {
+  background-color: blanchedalmond;
+  margin-bottom: .5rem;
+}
+
+.pokedex-wrapper {
+  display: flex;
+}
+
+.input {
+  margin: 0px 5px 0px 5px;
+}
