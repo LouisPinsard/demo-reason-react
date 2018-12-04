@@ -1,15 +1,37 @@
 [%bs.raw {|require('./pokedex.css')|}];
 [%bs.raw {|require('bootstrap/dist/css/bootstrap.min.css')|}];
 
-let component = ReasonReact.statelessComponent("Pokedex");
+type state =
+  | Loading
+  | Waiting;
+
+type action =
+  | Click;
+
+let component = ReasonReact.reducerComponent("Pokedex");
 
 let make = (_children) => {
   ...component,
-  render: _self =>
-    <div className={Cn.make(["bootstrap", "pokedex-wrapper"])}>
-      <label>(ReasonReact.string("Which pokemon do you want to choose ?"))
-        <input className={Cn.make(["input"])} type_="number" />
-      </label>
-      <button className={Cn.make(["btn", "btn-default", "submit-button"])}>(ReasonReact.string("Find"))</button>
-    </div>,
+  initialState: () => Waiting,
+  reducer: (action: action, _state: state) =>
+    switch action {
+    | Click => ReasonReact.Update(Loading)
+    },
+  render: self =>
+    switch self.state {
+    | Waiting =>
+      <div className={Cn.make(["bootstrap", "pokedex-wrapper"])}>
+        <label>(ReasonReact.string("Which pokemon do you want to choose ?"))
+          <input className={Cn.make(["input"])} type_="number" />
+        </label>
+        <button
+        className={Cn.make(["btn", "btn-default", "submit-button"])}
+        onClick={(_e) => self.send(Click)}
+        >
+          (ReasonReact.string("Find"))
+        </button>
+      </div>
+    | Loading =>
+      (ReasonReact.string("Loading..."))
+  },
 };
