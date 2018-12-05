@@ -1,24 +1,38 @@
 [%bs.raw {|require('./pokedex.css')|}];
 [%bs.raw {|require('bootstrap/dist/css/bootstrap.min.css')|}];
 
-type state =
+type status =
   | Loading
   | Waiting;
 
+type state = {
+  status: status,
+  input: string,
+};
+
 type action =
   | Click;
+
+let fetchPokemon = (pokemon: string) =>
+  Js.Promise.(
+    Fetch.fetch("http://pokeapi.salestock.net/api/v2/pokemon/"++pokemon)
+    |> then_(Fetch.Response.json)
+    |> Js.log
+  );
 
 let component = ReasonReact.reducerComponent("Pokedex");
 
 let make = (_children) => {
   ...component,
-  initialState: () => Waiting,
-  reducer: (action: action, _state: state) =>
+  initialState: () => {input: "", status: Waiting},
+  reducer: (action: action, state: state) =>
     switch action {
-    | Click => ReasonReact.Update(Loading)
+    | Click => ReasonReact.UpdateWithSideEffects({...state, status: Loading}, (self) =>
+     Js.Promise.(fetchPokemon(self.state.input))
+     )
     },
   render: self =>
-    switch self.state {
+    switch self.state.status {
     | Waiting =>
       <div className={Cn.make(["bootstrap", "pokedex-wrapper"])}>
         <label>(ReasonReact.string("Which pokemon do you want to choose ?"))
