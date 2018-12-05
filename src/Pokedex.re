@@ -5,26 +5,32 @@ type status =
   | Loading
   | Waiting;
 
+type nullableString =
+  | None
+  | Some(string);
 type state = {
   status: status,
-  input: string,
+  input: nullableString,
 };
 
 type action =
   | Click;
 
-let fetchPokemon = (pokemon: string) =>
-  Js.Promise.(
-    Fetch.fetch("http://pokeapi.salestock.net/api/v2/pokemon/"++pokemon)
-    |> then_(Fetch.Response.json)
-    |> Js.log
-  );
+let fetchPokemon = (pokemon: nullableString) =>
+  switch pokemon {
+  | Some(name) => Js.Promise.(
+      Fetch.fetch("http://pokeapi.salestock.net/api/v2/pokemon/"++name)
+      |> then_(Fetch.Response.json)
+      |> Js.log
+    );
+  | None => ()
+  }
 
 let component = ReasonReact.reducerComponent("Pokedex");
 
 let make = (_children) => {
   ...component,
-  initialState: () => {input: "", status: Waiting},
+  initialState: () => {input: None, status: Waiting},
   reducer: (action: action, state: state) =>
     switch action {
     | Click => ReasonReact.UpdateWithSideEffects({...state, status: Loading}, (self) =>
