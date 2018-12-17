@@ -3,7 +3,8 @@
 
 type status =
   | Loading
-  | Waiting;
+  | Waiting
+  | ErrorField;
 
 type nullableString =
   | None
@@ -15,7 +16,8 @@ type state = {
 
 type action =
   | Click
-  | UpdateInput(string);
+  | UpdateInput(string)
+  | Error;
 
 let fetchPokemon = (pokemon: nullableString) =>
   switch pokemon {
@@ -36,18 +38,19 @@ let getValue = (input) =>
 let component = ReasonReact.reducerComponent("Pokedex");
 
 let make = (_children) => {
-  ...component,
-  initialState: () => {input: None, status: Waiting},
-  reducer: (action: action, state: state) =>
-    switch action {
-    | Click => ReasonReact.UpdateWithSideEffects({...state, status: Loading}, (self) =>
-    Js.Promise.(fetchPokemon(self.state.input))
-    )
-    | UpdateInput(pokemonName) => ReasonReact.Update({...state, input: Some(pokemonName)})
-    },
-  render: self =>
-    switch self.state.status {
-    | Waiting =>
+  {
+    ...component,
+    initialState: () => {input: None, status: Waiting},
+    reducer: (action: action, state: state) =>
+      switch action {
+      | Click => ReasonReact.UpdateWithSideEffects({...state, status: Loading}, (self) =>
+      Js.Promise.(fetchPokemon(self.state.input))
+      )
+      | UpdateInput(pokemonName) => ReasonReact.Update({...state, input: Some(pokemonName)})
+      | Error => ReasonReact.Update({...state, status: ErrorField})
+      },
+    render: self =>
+    <div>
       <div className={Cn.make(["bootstrap", "pokedex-wrapper"])}>
         <label>(ReasonReact.string("Which pokemon do you want to choose ?"))
           <input
@@ -59,12 +62,20 @@ let make = (_children) => {
         </label>
         <button
           className={Cn.make(["btn", "btn-default", "submit-button"])}
-          onClick={_e => self.send(Click)}
+          onClick={_event => switch(self.state.input){
+            | Some(pokemonName) => self.send(Click)
+            | None => self.send(Error);
+            }
+          }
         >
           (ReasonReact.string("Find"))
         </button>
       </div>
-    | Loading =>
-      (ReasonReact.string("Loading..."))
-  },
+     ( switch self.state.status {
+      | Loading => (ReasonReact.string("Loading..."))
+      | ErrorField => (ReasonReact.string("ERROR: You should enter a pokemon name !!!"))
+      | Waiting => (ReasonReact.null)
+    })
+    </div>,
+}
 };
