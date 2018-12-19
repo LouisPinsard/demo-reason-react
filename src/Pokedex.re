@@ -69,7 +69,7 @@ let make = (_children) => {
           className={Cn.make(["btn", "btn-default", "submit-button"])}
           onClick={_event => switch(self.state.input){
             | "" => self.send(Error);
-            | pokemonName => self.send(Click)
+            | _ => self.send(Click)
             }
           }
         >
