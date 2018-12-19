@@ -35,7 +35,8 @@ let fetchPokemon = (pokemon: string) =>
       Fetch.fetch("http://pokeapi.salestock.net/api/v2/pokemon/"++pokemon)
       |> then_(Fetch.Response.json)
       |> then_(json =>
-      json |> Decode.pokemon |> resolve)
+      json |> Decode.pokemon |> (pokemon => Some(pokemon) |> resolve))
+      |> catch(_err => resolve(None))
     );
 
 let component = ReasonReact.reducerComponent("Pokedex");
@@ -48,7 +49,10 @@ let make = (_children) => {
       switch action {
       | Click => ReasonReact.UpdateWithSideEffects({...state, status: Loading}, (self) => Js.Promise.(
         fetchPokemon(self.state.input)
-        |> then_((pokemon) => resolve(self.send(LoadPokemonSuccess(pokemon))))
+        |> then_((p) => switch p {
+        | Some(pokemon) => resolve(self.send(LoadPokemonSuccess(pokemon)))
+        | _ => resolve(self.send(Error))
+        })
         |> ignore))
       | LoadPokemonSuccess(pokemon) => ReasonReact.Update({...state, status: PokemonDisplayed(pokemon)})
       | UpdateInput(pokemonName) => ReasonReact.Update({...state, input: pokemonName})
